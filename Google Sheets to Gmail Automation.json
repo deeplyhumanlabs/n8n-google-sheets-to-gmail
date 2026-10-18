@@ -1,0 +1,136 @@
+{
+  "name": "Google Sheets to Gmail Automation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "25733aac-f9eb-479e-bf94-6ebbd4d07a4a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "17hYY-K5GdTOAJM47ofHTmN-aYvGDQYNw-v4psNxpV9g",
+          "mode": "list",
+          "cachedResultName": "Email Automation Demo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17hYY-K5GdTOAJM47ofHTmN-aYvGDQYNw-v4psNxpV9g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17hYY-K5GdTOAJM47ofHTmN-aYvGDQYNw-v4psNxpV9g/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        176,
+        0
+      ],
+      "id": "cc1f7bf7-fb88-41e9-ac9c-0e9b9f4f2df0",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Msrz1hKBdIOL4o3N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\n\nif (rows.length === 0) {\n  return [];\n}\n\nconst escapeHtml = (value) =>\n  String(value ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;');\n\nconst records = rows.map(({ json }) => `\n  <tr>\n    <td style=\"padding: 10px; border: 1px solid #ddd;\">\n      ${escapeHtml(json.Name)}\n    </td>\n    <td style=\"padding: 10px; border: 1px solid #ddd;\">\n      ${escapeHtml(json.Course)}\n    </td>\n    <td style=\"padding: 10px; border: 1px solid #ddd;\">\n      ${escapeHtml(json.Status)}\n    </td>\n  </tr>\n`).join('');\n\nconst body = `\n  <div style=\"font-family: Arial, sans-serif; color: #333; line-height: 1.6;\">\n    <h2>Latest Spreadsheet Report</h2>\n    <p>Hello,</p>\n    <p>Here is the latest data retrieved from your Google Sheet.</p>\n    <p><strong>Total records:</strong> ${rows.length}</p>\n    <table style=\"border-collapse: collapse; width: 100%;\">\n      <thead>\n        <tr style=\"background-color: #f2f4f7;\">\n          <th style=\"padding: 10px; border: 1px solid #ddd;\">Name</th>\n          <th style=\"padding: 10px; border: 1px solid #ddd;\">Course</th>\n          <th style=\"padding: 10px; border: 1px solid #ddd;\">Status</th>\n        </tr>\n      </thead>\n      <tbody>${records}</tbody>\n    </table>\n    <p>Regards,<br>Deeply Human Bot</p>\n  </div>\n`;\n\nreturn [{\n  json: {\n    subject: 'Data Summary from Google Sheet',\n    body,\n    recordCount: rows.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        0
+      ],
+      "id": "71c7d357-1396-4f31-a514-044e2a49df61",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "deeplyhumanlabs@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "eec0ea83-cdfe-4882-8783-d1f6f70d8aee",
+      "name": "Send a message",
+      "webhookId": "8a880319-0638-441d-ad53-be3af2259ed8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6VpPuSVOE97sZvId",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f21fb49d-71e3-418c-8b4b-1a2243a8e762",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0513e109db06cd2323e56d2798f5b4c99f1bb82be3cf122fbab20598d13e64ad"
+  },
+  "nodeGroups": [],
+  "id": "p38ueIL3tXNl7Lz3",
+  "tags": []
+}
